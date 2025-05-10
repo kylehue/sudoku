@@ -1,0 +1,174 @@
+<template>
+   <div
+      class="h-screen w-screen flex flex-col items-center justify-center"
+      @click.self="hideNumberPad"
+   >
+      <div class="flex flex-col justify-center">
+         <div class="flex py-4 gap-2">
+            <button
+               @click="table = generateRandomUnsolvedSudokuTable(sizeRoot)"
+               :disabled="isVisualizing"
+            >
+               Generate random
+            </button>
+            <button
+               @click="table = table.map((v) => v.map(() => NaN))"
+               :disabled="isVisualizing"
+            >
+               Clear
+            </button>
+            <button
+               @click="table = solveSudoku(table)[0]"
+               :disabled="isVisualizing"
+            >
+               Solve
+            </button>
+            <button
+               @click="solveSudokuVisualizeAsync"
+               :disabled="isVisualizing"
+            >
+               {{ isVisualizing ? "Wanna stop? Press F5" : "Solve (Visualize)" }}
+            </button>
+         </div>
+         <div
+            class="flex flex-col outline-2 aspect-square"
+            :class="{
+               'bg-green-500': isSolved,
+               'text-black': isSolved,
+            }"
+         >
+            <div class="flex flex-1" v-for="(row, i) in table" :key="i">
+               <button
+                  class="aspect-square text-lg text-center outline flex-1 min-h-12 min-w-12"
+                  v-for="(_, j) in row"
+                  :key="j"
+                  :value="table[i][j]"
+                  @click="onCellClick($event, i, j)"
+                  :class="{
+                     'opacity-25':
+                        showPad &&
+                        !(activeCell[0] === i && activeCell[1] === j),
+                     'scale-105': activeCell[0] === i && activeCell[1] === j,
+                     'z-10': activeCell[0] === i && activeCell[1] === j,
+                     'bg-red-500': !validityMatrix[i][j],
+                  }"
+                  :disabled="isVisualizing"
+                  @keydown.delete="
+                     () => {
+                        table[i][j] = NaN;
+                        hideNumberPad();
+                     }
+                  "
+               >
+                  {{ isNaN(table[i][j]) ? "" : table[i][j] }}
+               </button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <Teleport to="body">
+      <div v-if="showPad" ref="padRef" :class="`number-pad `">
+         <button
+            v-for="n in sizeRoot ** 2"
+            :key="n"
+            class="aspect-square size-12 text-lg text-center bg-white text-black outline"
+            @click="handleNumberPadClick(n)"
+            :disabled="isVisualizing"
+         >
+            {{ n }}
+         </button>
+      </div>
+   </Teleport>
+</template>
+
+<script setup lang="ts">
+import { ref, nextTick, computed } from "vue";
+import { createPopper, type Instance } from "@popperjs/core";
+import {
+   generateRandomUnsolvedSudokuTable,
+   generateValidityMatrix,
+   isValidSudoku,
+   solveSudoku,
+   solveSudokuVisualize,
+} from "../lib/sudoku";
+
+const sizeRoot = 3;
+const table = ref(generateRandomUnsolvedSudokuTable(sizeRoot));
+const validityMatrix = computed(() => generateValidityMatrix(table.value));
+const isSolved = computed(() => isValidSudoku(table.value));
+
+const currentButton = ref<HTMLElement | null>(null);
+const padRef = ref<HTMLElement | null>(null);
+const popperInstance = ref<Instance | null>(null);
+const showPad = ref(false);
+const activeCell = ref([-1, -1]);
+
+const isVisualizing = ref(false);
+async function solveSudokuVisualizeAsync() {
+   isVisualizing.value = true;
+   await solveSudokuVisualize(table.value, async (currentTable) => {
+      table.value = currentTable.map((row) => [...row]);
+   });
+   isVisualizing.value = false;
+}
+
+function onCellClick(event: Event, i: number, j: number) {
+   if (
+      showPad.value &&
+      i === activeCell.value[0] &&
+      j === activeCell.value[1]
+   ) {
+      hideNumberPad();
+      return;
+   }
+
+   currentButton.value = event.currentTarget as HTMLElement;
+   activeCell.value = [i, j];
+   showPad.value = true;
+
+   nextTick(() => {
+      if (popperInstance.value) {
+         popperInstance.value.destroy();
+      }
+      if (currentButton.value && padRef.value) {
+         popperInstance.value = createPopper(
+            currentButton.value,
+            padRef.value,
+            {
+               placement: "bottom",
+               modifiers: [{ name: "offset", options: { offset: [0, 8] } }],
+            }
+         );
+      }
+   });
+}
+
+function hideNumberPad() {
+   showPad.value = false;
+   if (popperInstance.value) {
+      popperInstance.value.destroy();
+      popperInstance.value = null;
+      activeCell.value = [-1, -1];
+   }
+}
+
+function handleNumberPadClick(number: number) {
+   const [i, j] = activeCell.value;
+   table.value[i][j] = number;
+   hideNumberPad();
+}
+</script>
+
+<style scoped>
+.number-pad button:hover {
+   background-color: #ddd;
+}
+
+.number-pad {
+   background-color: #ddd;
+   outline: 1px solid black;
+   display: grid;
+   grid-template-columns: repeat(v-bind("sizeRoot"), minmax(0, 1fr));
+}
+</style>

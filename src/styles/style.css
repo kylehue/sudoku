@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+body,
+#app {
+   @apply flex flex-col items-center justify-center h-screen w-screen;
+}
+
+body {
+   background-color: black;
+   color: white;
+   font-family: monospace;
+}
+
+button {
+   @apply outline py-1 px-2;
+   transition-property: scale background-color opacity;
+   transition-duration: 250ms;
+   cursor: pointer;
+}
+
+button:hover {
+   background-color: #222;
+}
+
+button:disabled {
+   @apply opacity-75 pointer-events-none;
+}
