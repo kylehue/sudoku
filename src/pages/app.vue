@@ -5,10 +5,7 @@
    >
       <div class="flex flex-col justify-center">
          <div class="flex py-4 gap-2">
-            <button
-               @click="table = generateRandomUnsolvedSudokuTable(sizeRoot)"
-               :disabled="isVisualizing"
-            >
+            <button @click="regenerateTable()" :disabled="isVisualizing">
                Generate random
             </button>
             <button
@@ -17,12 +14,7 @@
             >
                Clear
             </button>
-            <button
-               @click="table = solveSudoku(table)[0]"
-               :disabled="isVisualizing"
-            >
-               Solve
-            </button>
+            <button @click="solve()" :disabled="isVisualizing">Solve</button>
             <button
                @click="solveSudokuVisualizeAsync"
                :disabled="isVisualizing"
@@ -35,8 +27,7 @@
          <div
             class="sudoku-table flex flex-col aspect-square"
             :class="{
-               'bg-green-500': isSolved,
-               'text-black': isSolved,
+               'bg-green-300': isSolved,
             }"
          >
             <div class="flex flex-1" v-for="(row, i) in table" :key="i">
@@ -52,7 +43,9 @@
                         !(activeCell[0] === i && activeCell[1] === j),
                      'scale-105': activeCell[0] === i && activeCell[1] === j,
                      'z-10': activeCell[0] === i && activeCell[1] === j,
-                     'bg-red-500': !validityMatrix[i][j],
+                     'bg-red-300': !validityMatrix[i][j],
+                     'font-bold': initialTable[i][j] === table[i][j],
+                     'text-xl': initialTable[i][j] === table[i][j],
                   }"
                   :disabled="isVisualizing"
                   @keydown.delete="
@@ -70,7 +63,7 @@
    </div>
 
    <Teleport to="body">
-      <div v-if="showPad" ref="padRef" :class="`number-pad `">
+      <div v-if="showPad" ref="padRef" class="number-pad">
          <button
             v-for="n in sizeRoot ** 2"
             :key="n"
@@ -101,6 +94,7 @@ import {
 const isDark = ref(false);
 const sizeRoot = 3;
 const table = ref(generateRandomUnsolvedSudokuTable(sizeRoot));
+const initialTable = ref(table.value);
 const validityMatrix = computed(() => generateValidityMatrix(table.value));
 const isSolved = computed(() => isValidSudoku(table.value));
 
@@ -112,11 +106,24 @@ const activeCell = ref([-1, -1]);
 
 const isVisualizing = ref(false);
 async function solveSudokuVisualizeAsync() {
+   if (isValidSudoku(table.value)) return;
+   initialTable.value = table.value.map((v) => [...v]);
    isVisualizing.value = true;
    await solveSudokuVisualize(table.value, async (currentTable) => {
       table.value = currentTable.map((row) => [...row]);
    });
    isVisualizing.value = false;
+}
+
+function solve() {
+   if (isValidSudoku(table.value)) return;
+   initialTable.value = table.value.map((v) => [...v]);
+   table.value = solveSudoku(table.value)[0] ?? initialTable.value;
+}
+
+function regenerateTable() {
+   table.value = generateRandomUnsolvedSudokuTable(sizeRoot);
+   initialTable.value = table.value.map((v) => [...v]);
 }
 
 function onCellClick(event: Event, i: number, j: number) {
