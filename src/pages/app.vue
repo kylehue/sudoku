@@ -27,11 +27,13 @@
                @click="solveSudokuVisualizeAsync"
                :disabled="isVisualizing"
             >
-               {{ isVisualizing ? "Wanna stop? Press F5" : "Solve (Visualize)" }}
+               {{
+                  isVisualizing ? "Wanna stop? Press F5" : "Solve (Visualize)"
+               }}
             </button>
          </div>
          <div
-            class="flex flex-col outline-2 aspect-square"
+            class="sudoku-table flex flex-col aspect-square"
             :class="{
                'bg-green-500': isSolved,
                'text-black': isSolved,
@@ -39,7 +41,7 @@
          >
             <div class="flex flex-1" v-for="(row, i) in table" :key="i">
                <button
-                  class="aspect-square text-lg text-center outline flex-1 min-h-12 min-w-12"
+                  class="aspect-square text-lg text-center flex-1 min-h-12 min-w-12"
                   v-for="(_, j) in row"
                   :key="j"
                   :value="table[i][j]"
@@ -72,18 +74,21 @@
          <button
             v-for="n in sizeRoot ** 2"
             :key="n"
-            class="aspect-square size-12 text-lg text-center bg-white text-black outline"
+            class="aspect-square size-12 text-lg text-center"
             @click="handleNumberPadClick(n)"
             :disabled="isVisualizing"
          >
             {{ n }}
          </button>
       </div>
+      <button class="flex absolute bottom-2 right-2" @click="isDark = !isDark">
+         {{ !isDark ? "light" : "dark" }}
+      </button>
    </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, computed } from "vue";
+import { ref, nextTick, computed, watch } from "vue";
 import { createPopper, type Instance } from "@popperjs/core";
 import {
    generateRandomUnsolvedSudokuTable,
@@ -93,6 +98,7 @@ import {
    solveSudokuVisualize,
 } from "../lib/sudoku";
 
+const isDark = ref(false);
 const sizeRoot = 3;
 const table = ref(generateRandomUnsolvedSudokuTable(sizeRoot));
 const validityMatrix = computed(() => generateValidityMatrix(table.value));
@@ -158,16 +164,14 @@ function handleNumberPadClick(number: number) {
    table.value[i][j] = number;
    hideNumberPad();
 }
+
+watch(isDark, (isDark) => {
+   document.documentElement.classList.toggle("dark", isDark);
+});
 </script>
 
 <style scoped>
-.number-pad button:hover {
-   background-color: #ddd;
-}
-
 .number-pad {
-   background-color: #ddd;
-   outline: 1px solid black;
    display: grid;
    grid-template-columns: repeat(v-bind("sizeRoot"), minmax(0, 1fr));
 }

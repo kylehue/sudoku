@@ -5,23 +5,57 @@ body,
    @apply flex flex-col items-center justify-center h-screen w-screen;
 }
 
+:root {
+   --bg: white;
+   --fg: black;
+   --bg-light: rgb(228, 224, 224);
+   --fg-light: rgb(34, 34, 37);
+}
+
+.dark:root {
+   --bg: black;
+   --fg: white;
+   --bg-light: rgb(34, 34, 37);
+   --fg-light: rgb(228, 224, 224);
+}
+
 body {
-   background-color: black;
-   color: white;
+   background-color: var(--bg);
+   color: var(--fg);
    font-family: monospace;
 }
 
 button {
-   @apply outline py-1 px-2;
-   transition-property: scale background-color opacity;
+   padding: 4px 8px;
+   border: 1px solid var(--fg);
+   transition-property: scale, background-color, opacity;
    transition-duration: 250ms;
    cursor: pointer;
 }
 
 button:hover {
-   background-color: #222;
+   background-color: var(--bg-light);
 }
 
 button:disabled {
    @apply opacity-75 pointer-events-none;
+}
+
+.sudoku-table {
+   border: 1px solid var(--fg);
+}
+
+.number-pad {
+   background-color: var(--fg);
+   color: var(--bg);
+   border: 1px solid var(--bg);
+}
+
+.number-pad button {
+   background-color: var(--fg);
+   border: 1px solid var(--bg);
+}
+
+.number-pad button:hover {
+   background-color: var(--fg-light);
 }
