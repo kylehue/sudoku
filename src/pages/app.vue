@@ -34,7 +34,8 @@
          <div
             class="sudoku-table flex flex-col aspect-square"
             :class="{
-               'bg-green-300': isSolved,
+               'bg-emerald-300': !isDark && isSolved,
+               'bg-emerald-800': isDark && isSolved,
             }"
          >
             <div class="flex flex-1" v-for="(row, i) in table" :key="i">
@@ -50,7 +51,8 @@
                         !(activeCell[0] === i && activeCell[1] === j),
                      'scale-105': activeCell[0] === i && activeCell[1] === j,
                      'z-10': activeCell[0] === i && activeCell[1] === j,
-                     'bg-red-300': !validityMatrix[i][j],
+                     'bg-red-300': !isDark && !validityMatrix[i][j],
+                     'bg-red-900': isDark && !validityMatrix[i][j],
                      'font-bold': initialTable[i][j] === table[i][j],
                      'text-xl': initialTable[i][j] === table[i][j],
                   }"
