@@ -15,14 +15,21 @@
                Clear
             </button>
             <button @click="solve()" :disabled="isVisualizing">Solve</button>
-            <button
-               @click="solveSudokuVisualizeAsync"
-               :disabled="isVisualizing"
-            >
-               {{
-                  isVisualizing ? "Wanna stop? Press F5" : "Solve (Visualize)"
-               }}
+            <button v-if="!isVisualizing" @click="solveSudokuVisualizeAsync">
+               Solve (Visualize)
             </button>
+            <div v-else class="flex flex-col">
+               <label for="visualizationDelay" class="text-xs">
+                  Delay ({{ visualizationDelay }} ms):
+               </label>
+               <input
+                  id="visualizationDelay"
+                  type="range"
+                  min="1"
+                  max="1000"
+                  v-model="visualizationDelay"
+               />
+            </div>
          </div>
          <div
             class="sudoku-table flex flex-col aspect-square"
@@ -97,6 +104,7 @@ const table = ref(generateRandomUnsolvedSudokuTable(sizeRoot));
 const initialTable = ref(table.value);
 const validityMatrix = computed(() => generateValidityMatrix(table.value));
 const isSolved = computed(() => isValidSudoku(table.value));
+const visualizationDelay = ref(100);
 
 const currentButton = ref<HTMLElement | null>(null);
 const padRef = ref<HTMLElement | null>(null);
@@ -174,6 +182,10 @@ function handleNumberPadClick(number: number) {
 
 watch(isDark, (isDark) => {
    document.documentElement.classList.toggle("dark", isDark);
+});
+
+watch(visualizationDelay, (delay) => {
+   (window as any).VISUALIZATION_DELAY = delay;
 });
 </script>
 

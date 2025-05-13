@@ -121,7 +121,7 @@ export function solveSudoku(
       let rowLookupSet = rowLookupSets[i];
       let colLookupSet = colLookupSets[j];
       let boxLookupSet = boxLookupSets[~~(i / sizeRoot)][~~(j / sizeRoot)];
-       
+
       for (let num = 1; num <= sizeSq; num++) {
          if (rowLookupSet.has(num)) continue;
          if (colLookupSet.has(num)) continue;
@@ -160,7 +160,6 @@ export async function solveSudokuVisualize(
    const sizeSq = table.length;
    const sizeRoot = Math.sqrt(sizeSq);
    const solutions: number[][][] = [];
-   const timeout = 100;
 
    const resultTable: number[][] = table.map((row) =>
       row.map((cell) => (isNaN(cell) ? NaN : cell))
@@ -190,8 +189,9 @@ export async function solveSudokuVisualize(
       }
    }
 
-   async function sleep(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
+   async function sleep() {
+      const delay = (window as any).VISUALIZATION_DELAY ?? 100;
+      return new Promise((resolve) => setTimeout(resolve, delay));
    }
 
    async function backtrack(i: number, j: number): Promise<boolean> {
@@ -221,7 +221,7 @@ export async function solveSudokuVisualize(
             let old = resultTable[i][j];
             resultTable[i][j] = num;
             if (onStep) await onStep(resultTable);
-            await sleep(timeout);
+            await sleep();
             resultTable[i][j] = old;
             continue;
          }
@@ -232,7 +232,7 @@ export async function solveSudokuVisualize(
          resultTable[i][j] = num;
 
          if (onStep) await onStep(resultTable);
-         await sleep(timeout);
+         await sleep();
 
          if (await backtrack(nextRow, nextCol)) return true;
 
